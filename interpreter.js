@@ -34,7 +34,7 @@ if (fs.existsSync('./package.toml')) {
   package = parse(fs.readFileSync('./package.toml', 'utf8'))
 }
 
-const cKeywords = package?.imports?.keywords ?? {}
+const cKeywords = package?.imports?.keywords
 
 const keywords = {
   ...(cKeywords ? require(cKeywords) : {}),
