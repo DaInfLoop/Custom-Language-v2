@@ -2,3 +2,6 @@
 name = "Custom-Language-v2"
 version = "1.0.0"
 entry_point = "main.lang"
+
+[git]
+repo = "https://github.com/DaInfLoop/Custom-Language-v2"

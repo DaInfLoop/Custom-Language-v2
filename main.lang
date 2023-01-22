@@ -1,15 +1,6 @@
-@ This is a comment.
+@ Wanna do OOP? Nah, suffer with this instead.
 
-DECLARE myStr : str
-DECLARE myInt : int
-DECLARE myFloat : float
-DECLARE myBool : bool
-
-DEBUG_VARS
-
-ASSIGN myStr = "so cool!"
-ASSIGN myInt = 69
-ASSIGN myFloat = 6.9
-ASSIGN myBool = true
-
-DEBUG_VARS
+DECLARE myObj.prop1 : str
+DECLARE myObj.prop2 : int
+DECLARE myObj.prop3 : float
+DECLARE myObj.prop4 : bool
