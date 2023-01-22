@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const argv = process.argv.slice(2);
 const q = require('readline-sync').question;
 const fs = require('node:fs')
