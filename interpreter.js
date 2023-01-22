@@ -25,7 +25,14 @@ function evalRegex(regex, str) {
   }
 }
 
+const { parse } = require('@iarna/toml');
+
+let package = parse(require('fs').readFileSync('./package.toml', 'utf8'))
+
+const cKeywords = package.imports?.keywords
+
 const keywords = {
+  ...(cKeywords ? require(cKeywords) : {}),
   declare(args) {
     // DECLARE var : type
     // args = [var, ":", type]

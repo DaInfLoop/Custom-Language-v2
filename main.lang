@@ -1,6 +1,0 @@
-@ Wanna do OOP? Nah, suffer with this instead.
-
-DECLARE myObj.prop1 : str
-DECLARE myObj.prop2 : int
-DECLARE myObj.prop3 : float
-DECLARE myObj.prop4 : bool

@@ -2,8 +2,6 @@ const argv = process.argv.slice(2);
 const q = require('readline-sync').question;
 const fs = require('node:fs')
 const r = require('node:repl')
-const streams = require('node:stream')
-const i = require('./interpreter')
 const toml = require('@iarna/toml')
 
 if (!argv.length) {
@@ -83,6 +81,7 @@ if (!argv.length) {
     }
   })
 } else if (["--run", "-s"].includes(argv[0])) {
+  const i = require('./interpreter')
   if (!fs.existsSync('package.toml') && !args[1]) {
     console.log("\u001b[31m" + "This directory does not have a \"package.toml\" file. Create one by using the \"--init\" arg." + "\u001b[39m")
   } else {
