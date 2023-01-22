@@ -26,10 +26,15 @@ function evalRegex(regex, str) {
 }
 
 const { parse } = require('@iarna/toml');
+const fs = require('node:fs');
 
-let package = parse(require('fs').readFileSync('./package.toml', 'utf8'))
+let package;
 
-const cKeywords = package.imports?.keywords
+if (fs.existsSync('./package.toml')) {
+  package = parse(fs.readFileSync('./package.toml', 'utf8'))
+}
+
+const cKeywords = package?.imports?.keywords ?? {}
 
 const keywords = {
   ...(cKeywords ? require(cKeywords) : {}),
