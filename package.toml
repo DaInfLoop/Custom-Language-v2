@@ -1,0 +1,4 @@
+[package]
+name = "Custom-Language-v2"
+version = "1.0.0"
+entry_point = "main.lang"
