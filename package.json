@@ -3,8 +3,11 @@
   "version": "1.0.0",
   "main": "./index.js",
   "bin": {
-    "cu-lang": "./cli.js"
+    "cu-lang": "./bin/cli.js"
   },
+  "directories": {
+    "bin": "./bin"
+  }
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -4,6 +4,7 @@ const argv = process.argv.slice(2);
 const q = require('readline-sync').question;
 const fs = require('node:fs')
 const r = require('node:repl')
+const p = require('node:path')
 const toml = require('@iarna/toml')
 
 if (!argv.length) {
@@ -35,7 +36,7 @@ if (!argv.length) {
   )
 } else if (["--init"].includes(argv[0])) {
   const package = {
-    name: process.cwd().split('/').slice(-1)[0],
+    name: p.basename(process.cwd()),
     description: null,
     version: "1.0.0",
     entry_point: "main.lang"
