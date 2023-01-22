@@ -160,7 +160,21 @@ const keywords = {
     if (a?.length) {
       return String(variables[a].value)
     } else {
-      // Another reason why I hate this being typed
+      // Check for string
+      let str = evalRegex(/"(.+)"|'(.+)'/g, args.join(' ')) ?? []
+
+      if (str.length) return str[1]
+
+      // Check for float (also checks for int)
+      let float = parseFloat(args.join(' '))
+
+      if (!isNaN(float)) return String(float)
+
+      // Check for bool
+      if (["true", "false"].includes(args.join(" "))) return args.join(' ')
+
+      // Nothing's passed, so we error
+      return new Error(`Could not find variable "${args.join(" ")}".`)
     }
   },
   "debug_vars"() {
