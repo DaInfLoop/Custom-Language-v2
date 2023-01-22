@@ -4,14 +4,16 @@ const Types = Object.freeze({
   "str": "str",
   "int": "int",
   "float": "float",
-  "bool": "bool"
+  "bool": "bool",
+  "obj": "obj"
 })
 
 const Defaults = Object.freeze({
   "str": "",
   "int": 0,
   "float": 0,
-  "bool": false
+  "bool": false,
+  "obj": {}
 })
 
 function evalRegex(regex, str) {
@@ -27,6 +29,7 @@ function evalRegex(regex, str) {
 
 const { parse } = require('@iarna/toml');
 const fs = require('node:fs');
+const q = require('readline-sync').question
 
 let package;
 
@@ -36,6 +39,84 @@ if (fs.existsSync('./package.toml')) {
 
 const cKeywords = package?.imports?.keywords
 
+function checkTypeAndAssign(v, args) {
+  switch (v.type) {
+    case Types.str:
+      let str = evalRegex(/"(.+)"|'(.+)'/g, args.join(' ')) ?? []
+      if (str.length) {
+        str = str[1]
+      } else {
+        // Check for variables with the name
+        let a = Object.keys(variables).filter(x => x === args.join(' '))[0]
+  
+        if (a.length) {
+          str = `${variables[a].value}`
+        } else {
+          return new Error(`Could not find variable "${args.join(" ")}". Did you mean to stringify the value?`)
+        }
+      }
+  
+      v.value = str
+      break;
+  
+    case Types.int:
+      let int = parseInt(args.join(' '));
+  
+      if (isNaN(int)) {
+        // Check for variables with the name
+        let a = Object.keys(variables).filter(x => x === args.join(' '))[0]
+  
+        if (a.length) {
+          int = parseInt(variables[a].value)
+        } else {
+          return new Error(`Could not find variable "${args.join(" ")}". The value you passed may also not be a valid integer.`)
+        }
+      }
+  
+      v.value = int
+      break;
+  
+    case Types.float:
+      let float = parseFloat(args.join(' '));
+  
+      if (isNaN(float)) {
+        // Check for variables with the name
+        let a = Object.keys(variables).filter(x => x === args.join(' '))[0]
+  
+        if (a.length) {
+          int = parseFloat(variables[a].value)
+        } else {
+          return new Error(`Could not find variable "${args.join(" ")}". The value you passed may also not be a valid float.`)
+        }
+      }
+  
+      v.value = float
+      break;
+  
+    case Types.bool:
+      let bool;
+  
+      if (["true", "false"].includes(args.join(" "))) {
+        bool = ("true"===args.join(" "))
+      } else {
+        // Check for variables with the name
+        let a = Object.keys(variables).filter(x => x === args.join(' '))[0]
+  
+        if (a.length) {
+          bool = ("true"===variables[a].value)
+        } else {
+          return new Error(`Could not find variable "${args.join(" ")}". The value you passed may also not be a valid boolean.`)
+        }
+      }
+  
+      v.value = bool
+      break;
+  
+    case Types.obj:
+      return new Error("To edit an object, edit its properties manually.")
+  }
+}
+
 const keywords = {
   ...(cKeywords ? require(cKeywords) : {}),
   declare(args) {
@@ -44,6 +125,28 @@ const keywords = {
     let argsTrimmed = args.filter(x=>!!x.trim())
 
     if (!argsTrimmed[0]) return new Error(`Please specify a variable name`)
+
+    if (argsTrimmed[0].includes('.')) {
+      let a = { value: variables }
+      oopHackyStuff = argsTrimmed[0].split('.')
+
+      for (let e of oopHackyStuff) {
+        let i = oopHackyStuff.indexOf(e)
+
+        if (a.value[e]) {
+          if (i != 0) return new Error(`Property ${e} is already declared`)
+        }
+
+        a = a.value[e]
+      }
+
+      variables[oopHackyStuff[0]].value[oopHackyStuff[1]] =  {
+        type: Types[argsTrimmed[2]],
+        value: Defaults[argsTrimmed[2]]
+      }
+
+      return;
+    }
 
     if (argsTrimmed[1] !== ":") return new Error(`Expected ":" when declaring variable, got "${argsTrimmed[1] || ""}" instead`)
 
@@ -68,6 +171,27 @@ const keywords = {
 
     if (!varName) return new Error(`Please specify a variable name`)
 
+    let oopHackyStuff;
+    let oopHackyStuff2 = []
+
+    if (varName.includes('.')) {
+      let a = { value: variables }
+      oopHackyStuff = varName.split('.')
+
+      for (let e of oopHackyStuff) {
+        let i = oopHackyStuff.indexOf(e)
+
+        if (!a.value[e]) {
+          if (i == 0) return new Error(`Variable ${e} isn't declared`)
+          else return new Error(`Property ${e} isn't declared`)
+        }
+
+        a = a.value[e]
+      }
+
+      return checkTypeAndAssign(variables[oopHackyStuff[0]].value[oopHackyStuff[1]], args)
+    }
+
     if (!variables[varName]) return new Error(`Variable ${varName} isn't declared`)
 
     if (e !== "=") return new Error(`Expected "=" when assigning value to variable, got "${e}" instead`)
@@ -75,81 +199,26 @@ const keywords = {
     if (!args.join(' ')) return new Error(`Specify a value for variable "${varName}"`)
 
     // Types. yay.
-    let variable = variables[varName]
-
-    switch (variable.type) {
-      case 'str':
-        let str = evalRegex(/"(.+)"|'(.+)'/g, args.join(' ')) ?? []
-        if (str.length) {
-          str = str[1]
-        } else {
-          // Check for variables with the name
-          let a = Object.keys(variables).filter(x => x === args.join(' '))[0]
-
-          if (a.length) {
-            str = `${variables[a].value}`
-          } else {
-            return new Error(`Could not find variable "${args.join(" ")}". Did you mean to stringify the value?`)
-          }
-        }
-
-        variables[varName].value = str
-        break;
-
-      case 'int':
-        let int = parseInt(args.join(' '));
-
-        if (isNaN(int)) {
-          // Check for variables with the name
-          let a = Object.keys(variables).filter(x => x === args.join(' '))[0]
-
-          if (a.length) {
-            int = parseInt(variables[a].value)
-          } else {
-            return new Error(`Could not find variable "${args.join(" ")}". The value you passed may also not be a valid integer.`)
-          }
-        }
-
-        variables[varName].value = int
-        break;
-
-      case 'float':
-        let float = parseFloat(args.join(' '));
-
-        if (isNaN(float)) {
-          // Check for variables with the name
-          let a = Object.keys(variables).filter(x => x === args.join(' '))[0]
-
-          if (a.length) {
-            int = parseFloat(variables[a].value)
-          } else {
-            return new Error(`Could not find variable "${args.join(" ")}". The value you passed may also not be a valid float.`)
-          }
-        }
-
-        variables[varName].value = float
-        break;
-
-      case 'bool':
-        let bool;
-
-        if (["true", "false"].includes(args.join(" "))) {
-          bool = ("true"===args.join(" "))
-        } else {
-          // Check for variables with the name
-          let a = Object.keys(variables).filter(x => x === args.join(' '))[0]
-
-          if (a.length) {
-            bool = ("true"===variables[a].value)
-          } else {
-            return new Error(`Could not find variable "${args.join(" ")}". The value you passed may also not be a valid boolean.`)
-          }
-        }
-
-        variables[varName].value = bool
-        break;
-    }
+    return checkTypeAndAssign(variables[varName], args)
   },
+  // in(args) {
+  //   // args = [...question, "=", var]
+  //   // IN "question" = var_name
+
+  //   args = args.join(' ').split('=').map((x,i,a)=>i==a.length-1?x.trim():x)
+
+  //   let varName = args.pop();
+
+  //   if (!variables[varName]) return new Error(`Variable "${varName}" is not declared`)
+
+  //   if (variables[varName].type != Types.str) return new Error("Currently, the \"IN\" keyword only supports string values.")
+    
+  //   let question = args.join('=').trim()
+
+  //   keywords.out([question])
+  //   keywords.assign([varName, "=", `"${q("> ")}"`])
+  //   return;
+  // },
   out(args) {
     // args = [...out]
     // OUT variable || OUT value
@@ -177,7 +246,7 @@ const keywords = {
       return new Error(`Could not find variable "${args.join(" ")}".`)
     }
   },
-  "debug_vars"() {
+  "debug_vars"() {  
     return JSON.stringify(variables, null, 2)
   }
 }
