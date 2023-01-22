@@ -4,7 +4,6 @@ const argv = process.argv.slice(2);
 const q = require('readline-sync').question;
 const fs = require('node:fs')
 const r = require('node:repl')
-const p = require('node:path')
 const toml = require('@iarna/toml')
 
 if (!argv.length) {
@@ -36,7 +35,7 @@ if (!argv.length) {
   )
 } else if (["--init"].includes(argv[0])) {
   const package = {
-    name: p.basename(process.cwd()),
+    name: process.cwd().split('/').slice(-1)[0],
     description: null,
     version: "1.0.0",
     entry_point: "main.lang"
@@ -74,6 +73,7 @@ if (!argv.length) {
     console.log("Aborted.\n")
   }
 } else if (["--repl", "-r"].includes(argv[0])) {
+  const i = require('./interpreter')
   r.start({
     eval: (cmd, context, filename, callback) => {
       cmd = cmd.trim()

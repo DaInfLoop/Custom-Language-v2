@@ -1,1 +1,1 @@
-module.exports = require('./bin/interpreter.js')
+module.exports = require('./interpreter.js')
