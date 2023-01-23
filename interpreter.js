@@ -226,7 +226,11 @@ const keywords = {
     // Check if it's a variable first
     let a = Object.keys(variables).filter(x => x === args.join(' '))[0]
 
-    if (a?.length) {
+    if (a) {
+      if (variables[a].type === Types.obj) return JSON.stringify(variables[a].value, (k, v) => {
+        if (k == "") return v
+        return v.value
+      })
       return String(variables[a].value)
     } else {
       // Check for string
